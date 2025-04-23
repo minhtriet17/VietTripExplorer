@@ -1,35 +1,41 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link } from "react-router-dom";
 
-const PostCard = ({post}) => {
+const PostCard = ({ post }) => {
   return (
-    <div className='bg-white hover:shadow-lg transition-shadow
-    overflow-hidden rounded-lg w-full sm:w-[330px] border border-gray-400'>
-        {/* link wrapping the image */}
-        <Link to={`/post/${post.slug}`} className='block h-[250px] w-full
-        overflow-hidden'>
-            <img src={post.image} alt="post cover" className='w-full h-full
-            object-cover transition-transform duration-300 hover:scale-105 bg-gray-200'/>
+    <div className="bg-white hover:shadow-2xl transition-all duration-300 ease-in-out rounded-lg w-full sm:w-[330px] border border-gray-300">
+      {/* link wrapping the image */}
+      <Link
+        to={`/post/${post.slug}`}
+        className="block h-[250px] w-full overflow-hidden"
+      >
+        <img
+          src={post.image}
+          alt="post cover"
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110 bg-gray-200"
+        />
+      </Link>
+
+      {/* Content Section */}
+      <div className="p-4 flex flex-col gap-3">
+        {/* Post title */}
+        <p className="text-lg sm:text-xl font-semibold line-clamp-2 text-slate-800 hover:text-blue-600 transition-colors duration-200">
+          {post.title}
+        </p>
+
+        {/* Post category */}
+        <span className="italic text-sm text-slate-600">{post.category}</span>
+
+        {/* Read Article button */}
+        <Link
+          to={`/post/${post.slug}`}
+          className="mt-4 py-2 px-4 text-center rounded-md border border-transparent text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 transform hover:scale-105"
+        >
+          Đọc Bài Viết
         </Link>
-
-        {/* Content Section */}
-        <div className="p-3 flex flex-col gap-2">
-            {/* Post tile */}
-            <p className="text-lg font-semibold line-clamp-1 text-slate-700">
-                {post.title}
-            </p>
-
-            {/* Post category */}
-            <span className='italic text-[16px] text-slate-600'>{post.category}</span>
-
-            {/* Read Article button */}
-            <Link to={`/post/${post.slug}`} className='border border-slate-500 hover:bg-blue-500 text-blue-700
-            hover:text-white text-center py-2 rounded-md mt-auto'>
-                Read Article
-            </Link>
-        </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default PostCard
+export default PostCard;
