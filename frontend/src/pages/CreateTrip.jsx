@@ -6,6 +6,7 @@ import { chatSession } from '@/service/AIModal';
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useSelector } from "react-redux";
 
 const CreateTrip = () => {
 
@@ -13,7 +14,9 @@ const CreateTrip = () => {
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(false);
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+
+    const { currentUser } = useSelector((state) => state.user);
 
     const handleInputChange = (name, value) => {
         setFormData({
@@ -33,6 +36,12 @@ const CreateTrip = () => {
       };
 
     const OnGenerateTrip= async () => {
+
+        if (!currentUser || !currentUser._id) {
+            toast.error("Bạn cần đăng nhập để tạo lịch trình!");
+            navigate("/sign-in");
+            return;
+        }
 
         if (
             !formData?.location ||

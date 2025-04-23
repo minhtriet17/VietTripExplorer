@@ -20,6 +20,7 @@ import Search from './pages/Search'
 import CreateTrip from './pages/CreateTrip'
 import ViewTrip from './pages/ViewTrip'
 import MyTrip from './pages/MyTrip'
+import EmailVerifyPage from './pages/EmailVerifyPage'
 
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
       <Routes>
         <Route path="/Sign-in" element={<SignInForm />}/>
         <Route path="/Sign-up" element={<SignUpForm />}/>
+        <Route path="/verify-email" element={<EmailVerifyPage />} />
 
         <Route path="/" element={<Home />}/>
         <Route path="/about" element={<About />}/>
