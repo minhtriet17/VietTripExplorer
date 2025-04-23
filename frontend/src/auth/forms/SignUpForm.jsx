@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,37 +13,39 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
 import { toast } from "sonner";
-import GoogleAuth from '@/components/shared/GoogleAuth'
+import GoogleAuth from "@/components/shared/GoogleAuth";
 
 import ReCAPTCHA from "react-google-recaptcha";
 
- 
-const formSchema = z.object({
-  username: z
-  .string()
-  .min(2, {message: "Username must be at least 2 characters."}),
+const formSchema = z
+  .object({
+    username: z
+      .string()
+      .min(2, { message: "Username must be at least 2 characters." }),
 
-  email: z.string().email({ message: "Invalid email address. "}),
+    email: z.string().email({ message: "Invalid email address. " }),
 
-  password: z.string().min(8, {message: "Password must be at least 8 characters. "}),
-  
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  path: ["confirmPassword"],
-  message: "Passwords do not match!",
-});
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters. " }),
+
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match!",
+  });
 
 const SignUpForm = () => {
-
   const [captchaToken, setCaptchaToken] = useState("");
 
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -53,7 +55,7 @@ const SignUpForm = () => {
       password: "",
       confirmPassword: "",
     },
-  })
+  });
 
   const handleCaptchaChange = (token) => {
     setCaptchaToken(token);
@@ -66,8 +68,8 @@ const SignUpForm = () => {
     }
 
     try {
-      setLoading(true)
-      setErrorMessage(null)
+      setLoading(true);
+      setErrorMessage(null);
 
       const payload = {
         ...values,
@@ -76,151 +78,167 @@ const SignUpForm = () => {
 
       const res = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
-      
-      const data = await res.json()
+      });
+
+      const data = await res.json();
 
       if (data.success === false) {
-        setLoading(false)
-        toast("Sign up failed! Please try again.")
-        return setErrorMessage(data.message)
+        setLoading(false);
+        toast("Sign up failed! Please try again.");
+        return setErrorMessage(data.message);
       }
 
-      setLoading(data)
+      setLoading(data);
 
       if (res.ok) {
-        toast("Sign up Successful!")
-        navigate("/sign-in")
+        toast("Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản.");
+        navigate("/sign-in");
       }
     } catch (error) {
-      setErrorMessage(error.message)
-      setLoading(false)
-      toast("Something went wrong!")
+      setErrorMessage(error.message);
+      setLoading(false);
+      toast("Something went wrong!");
     }
   }
 
   return (
-    <div className='min-h-screen mt-20'>
-      <div className='flex p-3 max-w-3xl sm:max-w-5xl mx-auto flex-col md:flex-row
-      md:items-center gap-5'>
-        {/* left */}
-        <div className="flex-1">
-          <Link to={"/"} className='font-bold text-2xl sm:text-4xl flex flex-wrap'>
-            <span className='text-slate-500'>Travel</span>
-            <span className='text-slate-900'>Dispatch</span>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-white px-4 py-10">
+      <div className="max-w-6xl mx-auto flex flex-col-reverse md:flex-row items-center gap-10 bg-white rounded-2xl shadow-lg p-6 sm:p-10">
+        {/* Left Section */}
+        <div className="flex-1 text-center md:text-left">
+          <Link to="/" className="text-3xl sm:text-5xl font-bold text-blue-600">
+            VietTrip<span className="text-slate-800">Explorer</span>
           </Link>
-
-          <h2 className='text-[24px] md:text-[30px] font-bold leading-[140%]
-          tracking-tighter pt-5 sm:pt-12'>
-            Create a new account
+          <h2 className="text-xl sm:text-3xl font-bold mt-6">
+            Tạo tài khoản mới
           </h2>
+          <p className="text-gray-500 mt-2 text-sm sm:text-base">
+            Chào mừng bạn đến với nền tảng khám phá và gợi ý địa điểm du lịch
+            Việt Nam!
+          </p>
+          <img
+            src="/logo.png"
+            alt="Travel Banner"
+            className="w-full mt-6 rounded-xl shadow-md hidden md:block"
+          />
+        </div>
 
-          <p className="text-slate-500 text-[14px] font-medium leading-[140%] md:text-[16px] md:font-normal mt-2">
-            Welcome to Travel Dispatch, Please provide your details
-            </p>        
+        {/* Right Section - Form */}
+        <div className="flex-1 w-full max-w-md">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Username */}
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tên người dùng</FormLabel>
+                    <FormControl>
+                      <Input placeholder="travel_lover" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="example@gmail.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Password */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mật khẩu</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Confirm Password */}
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Xác nhận mật khẩu</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                onChange={handleCaptchaChange}
+              />
+
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-xl transition duration-300"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="animate-pulse">Đang đăng ký...</span>
+                ) : (
+                  <span>Đăng ký</span>
+                )}
+              </Button>
+
+              <GoogleAuth />
+            </form>
+          </Form>
+
+          <div className="text-center text-sm text-gray-600 mt-4">
+            Đã có tài khoản?{" "}
+            <Link
+              to="/sign-in"
+              className="text-blue-500 font-medium hover:underline"
+            >
+              Đăng nhập ngay
+            </Link>
           </div>
 
-          {/* Right */}
-
-          <div className="flex-1">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-
-                      <FormControl>
-                        <Input type="text" placeholder="Username" {...field} />
-                      </FormControl>
-                      
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-
-                      <FormControl>
-                        <Input type="email" placeholder="xyz@example.com" {...field} />
-                      </FormControl>
-                      
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-
-                      <FormControl>
-                        <Input type="password" placeholder="Password" {...field} />
-                      </FormControl>
-                      
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      
-                      <FormControl>
-                        <Input type="password" placeholder="Confirm Password" {...field} />
-                      </FormControl>
-                      
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <ReCAPTCHA
-                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                  onChange={handleCaptchaChange}
-                />
-
-                <Button type="submit" className="bg-blue-500 w-full" disabled={loading}>
-                  {loading ? (
-                    <span className='animate-pulse'>Loading...</span>
-                  ) : (
-                    <span>Sign Up</span>
-                  )}
-                </Button>
-
-                <GoogleAuth />
-              </form>
-            </Form>
-
-            <div className="flex gap-2 text-sm mt-5">
-              <span>Have an account?</span>
-
-              <Link to="/sign-in" className='text-blue-500'>
-                  Sign In
-              </Link>
-            </div>
-
-            {errorMessage && <p className='mt-5 text-red-500'>{errorMessage}</p>}
-          </div>
+          {errorMessage && (
+            <p className="mt-4 text-red-500 text-sm">{errorMessage}</p>
+          )}
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SignUpForm
+export default SignUpForm;

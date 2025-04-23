@@ -14,8 +14,21 @@ const PlaceCardItem = ({ plan }) => {
   }, [plan]);
       
   const GetPlacePhoto = async () => {
+    const hasCoordinates = !!(plan?.Coordinates?.latitude && plan?.Coordinates?.longitude);
+
     const data = {
-      textQuery: plan?.PlaceName,
+      textQuery: `${plan?.PlaceName}, Việt Nam`,
+      ...(hasCoordinates && {
+        locationBias: {
+          circle: {
+            center: {
+              latitude: plan.Coordinates.latitude,
+              longitude: plan.Coordinates.longitude,
+            },
+            radius: 3000,
+          },
+        },
+      }),
     };
 
     try {
@@ -45,16 +58,21 @@ const PlaceCardItem = ({ plan }) => {
   return (
     <div className="border rounded-xl p-4 flex flex-col hover:scale-105 transition-all hover:shadow duration-200 ease-in-out cursor-pointer h-full">
       <a
+        // href={
+        //   plan?.Coordinates?.latitude && plan?.Coordinates?.longitude
+        //     ? `https://www.google.com/maps/search/?api=1&query=${plan.Coordinates.latitude},${plan.Coordinates.longitude}`
+        //     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plan?.PlaceName || "")}`
+        // }
         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plan?.PlaceName || "")}`}
         target="_blank"
         rel="noopener noreferrer"
         className="block h-full"
       >
-        <div className="flex flex-col justify-between h-full">
+        <div className="border rounded-xl p-4 flex flex-col hover:scale-105 transition-all hover:shadow duration-200 ease-in-out cursor-pointer h-[420px]">
           {/* Image */}
           <img
             src={photoUrl} // Chỉ dùng photoUrl, đã có fallback
-            className="w-full h-[250px] object-cover rounded-xl mb-4"
+            className="w-full h-[200px] object-cover rounded-xl mb-4 aspect-[4/3]"
             alt="Place"
           />
 

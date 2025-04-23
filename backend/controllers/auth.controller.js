@@ -2,6 +2,7 @@ import bcryptjs from "bcryptjs"
 import User from "../models/user.model.js"
 import { errorHandler } from "../utils/error.js"
 import jwt from "jsonwebtoken"
+import nodemailer from 'nodemailer';
 
 import fetch from 'node-fetch'
 
@@ -31,18 +32,59 @@ export const signup = async (req, res, next) => {
         return next(errorHandler(400, "All fields are required"))
     }
 
-    const hashedPassword = bcryptjs.hashSync(password, 10)
+    
+    try {
+        const hashedPassword = bcryptjs.hashSync(password, 10)
 
-    const newUser = new User({
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ success: false, message: "Email already in use" });
+        }
+
+        const newUser = new User({
         username,
         email,
         password: hashedPassword,
+        isVerified: false
     })
-
-    try {
         await newUser.save()
 
-        res.json("Signup successful")
+        // Tạo token xác minh email
+        const emailToken = jwt.sign(
+            { email },
+            process.env.EMAIL_TOKEN_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${emailToken}`;
+
+        // Gửi email xác minh
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.GMAIL_USER,
+                pass: process.env.GMAIL_PASS,
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.GMAIL_USER,
+            to: email,
+            subject: 'Verify your email address',
+            html: `
+                <p>Hello ${username},</p>
+                <p>Thank you for registering. Please verify your email by clicking the link below:</p>
+                <a href="${verificationUrl}">${verificationUrl}</a>
+                <p>This link will expire in 24 hours.</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.status(201).json({
+            success: true,
+            message: "Signup successful. Please check your email to verify your account."
+        });
     } catch (error) {
         next(error)
     }
@@ -153,3 +195,32 @@ export const google = async(req, res, next) => {
         next(error)
     }
 }
+
+export const verifyEmail = async (req, res) => {
+    const token = req.query.token;
+
+    if (!token) {
+        return res.status(400).json({ success: false, message: "Missing token" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.EMAIL_TOKEN_SECRET);
+
+        const user = await User.findOne({ email: decoded.email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        if (user.isVerified) {
+            return res.status(200).json({ success: true, message: "Email already verified" });
+        }
+
+        user.isVerified = true;
+        await user.save();
+
+        return res.status(200).json({ success: true, message: "Email successfully verified" });
+    } catch (error) {
+        return res.status(400).json({ success: false, message: "Invalid or expired token" });
+    }
+};
