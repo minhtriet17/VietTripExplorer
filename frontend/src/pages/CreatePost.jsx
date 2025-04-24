@@ -10,40 +10,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';;
 import { toast } from "sonner";
 import { getFilePreview, uploadFile } from "@/lib/appwrite/uploadImage";
 import { Link, useNavigate } from "react-router-dom";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Underline from "@tiptap/extension-underline";
+import Heading from "@tiptap/extension-heading";
+import TextAlign from "@tiptap/extension-text-align";
+import { ResizableImage } from "@/lib/ResizableImage";
 
-//Quill.register('modules/imageResize', ImageResize);
+import TextStyle from "@tiptap/extension-text-style";
+import FontSize from "@/lib/FontSize";
 
 const CreatePost = () => {
   const navigate = useNavigate();
 
   const [file, setFile] = useState(null);
   const [imageUploadError, setImageUploadError] = useState(null);
-  const [imageUploading, setImageUploading] = useState(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
-  const quillRef = useRef(null);
-
-  const [formData, setFormData] = useState({});
-  // console.log(formData)
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "",
+    content: "",
+    image: "",
+  });
 
   const [createPostError, setCreatePostError] = useState(null);
-
   const [previewImage, setPreviewImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const updateFormData = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleUploadImage = async () => {
+    if (!file) {
+      setImageUploadError("Please select an image!");
+      toast("Please select an image!");
+      return;
+    }
+
     try {
-      if (!file) {
-        setImageUploadError("Please select an image!");
-        toast("Please select an image!");
-        return;
-      }
-
       setImageUploading(true);
-
       setImageUploadError(null);
 
       const uploadedFile = await uploadFile(file);
@@ -53,7 +64,7 @@ const CreatePost = () => {
 
       toast("Image uploaded Successfully!");
       setImageUploading(false);
-      setPreviewImage(null); // Reset preview sau khi upload xong
+      setPreviewImage(null); // Reset preview after upload
     } catch (error) {
       setImageUploadError("Image upload failed");
       console.log(error);
@@ -63,14 +74,31 @@ const CreatePost = () => {
     }
   };
 
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "") // bỏ ký tự đặc biệt
+      .replace(/\s+/g, "-"); // thay khoảng trắng bằng dấu gạch ngang
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.title || !formData.category || !formData.content) {
+      toast("Vui lòng điền đầy đủ thông tin!");
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
+
+      const slug = generateSlug(formData.title);
+
       const res = await fetch("/api/post/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, slug }),
       });
 
       const data = await res.json();
@@ -78,78 +106,116 @@ const CreatePost = () => {
       if (!res.ok) {
         toast("Something went wrong! Please try again.");
         setCreatePostError(data.message);
-
         return;
       }
 
-      if (res.ok) {
-        toast("Article Published Successfully!");
-        setCreatePostError(null);
-
-        navigate(`/post/${data.slug}`);
-      }
+      toast("Đăng bài viết thành công!");
+      navigate(`/post/${data.slug}`);
     } catch (error) {
-      toast("Something went wrong! Please try again.");
-      setCreatePostError("Something went wrong! Please try again.");
+      console.error(error);
+      setCreatePostError("Đã xảy ra lỗi!");
+      toast("Đăng bài viết thất bại!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleImageUploadInEditor = async () => {
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: false, // disable default heading (chúng ta dùng custom)
+      }),
+      Heading.configure({
+        levels: [1, 2, 3],
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      ResizableImage,
+      TextStyle,
+      FontSize,
+    ],
+    content: formData.content,
+    onUpdate({ editor }) {
+      updateFormData("content", editor.getHTML());
+    },
+  });
 
+  const insertImageToEditor = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
     input.onchange = async () => {
       const file = input.files[0];
       if (file) {
         try {
           const uploadedFile = await uploadFile(file);
-          const url = getFilePreview(uploadedFile.$id);
+          const imageUrl = getFilePreview(uploadedFile.$id);
+          const width = prompt("Chiều rộng ảnh (vd: 400px hoặc auto):", "auto");
+          const height = prompt("Chiều cao ảnh (vd: 300px hoặc auto):", "auto");
 
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection();
-          editor.insertEmbed(range.index, "image", url);
-
-          // Đảm bảo rằng module resize có thể chỉnh sửa ảnh đã được chèn vào
-          // const img = editor.root.querySelector("img[src='" + url + "']");
-          // if (img) {
-          //   img.style.maxWidth = "100%"; // Đảm bảo ảnh có thể được điều chỉnh kích thước
-          // }
-
+          editor
+            .chain()
+            .focus()
+            .setImage({ src: imageUrl, width, height })
+            .run();
           toast("Ảnh đã được chèn vào bài viết!");
         } catch (error) {
-          console.error("Error uploading image: ", error);
           toast("Failed to upload image into editor");
         }
       }
     };
+    input.click();
   };
 
-  const modules = {
-    toolbar: {
-      container: [
-        [{ header: [1, 2, 3, false] }],
-        ["bold", "italic", "underline", "strike"],
-        [{ list: "ordered" }],
-        ["link", "image"],
-        ["clean"],
-      ],
-      handlers: {
-        image: handleImageUploadInEditor,
-      },
+  const toolbarButtons = [
+    {
+      command: "toggleBold",
+      label: "B",
+      isActive: () => editor?.isActive("bold"),
     },
-  };
-
-  const formats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "list",
-    "link",
-    "image",
+    {
+      command: "toggleItalic",
+      label: "I",
+      isActive: () => editor?.isActive("italic"),
+    },
+    {
+      command: "toggleUnderline",
+      label: "U",
+      isActive: () => editor?.isActive("underline"),
+    },
+    {
+      command: "toggleBulletList",
+      label: "• List",
+      isActive: () => editor?.isActive("bulletList"),
+    },
+    {
+      command: "toggleOrderedList",
+      label: "1. List",
+      isActive: () => editor?.isActive("orderedList"),
+    },
+    {
+      command: "setHeading",
+      args: { level: 1 },
+      label: "H1",
+      isActive: () => editor?.isActive("heading", { level: 1 }),
+    },
+    {
+      command: "setHeading",
+      args: { level: 2 },
+      label: "H2",
+      isActive: () => editor?.isActive("heading", { level: 2 }),
+    },
+    {
+      command: "setHeading",
+      args: { level: 3 },
+      label: "H3",
+      isActive: () => editor?.isActive("heading", { level: 3 }),
+    },
+    { command: "setTextAlign", args: "left", label: "←" },
+    { command: "setTextAlign", args: "center", label: "↔" },
+    { command: "setTextAlign", args: "right", label: "→" },
   ];
 
   return (
@@ -165,19 +231,17 @@ const CreatePost = () => {
             type="text"
             placeholder="Nhập tiêu đề bài viết"
             required
+            value={formData.title}
             id="title"
-            className="flex-1 h-14 sm:h-16 border border-slate-300 rounded-lg px-6 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
+            className="flex-1 h-14 sm:h-16 border border-slate-300 rounded-lg px-6 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200"
+            onChange={(e) => updateFormData("title", e.target.value)}
           />
 
           <Select
-            onValueChange={(value) =>
-              setFormData({ ...formData, category: value })
-            }
+            value={formData.category}
+            onValueChange={(value) => updateFormData("category", value)}
           >
-            <SelectTrigger className="w-full sm:w-64 h-14 sm:h-16 border border-slate-300 rounded-lg px-6 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <SelectTrigger className="w-full sm:w-64 h-14 sm:h-16 border border-slate-300 rounded-lg px-6 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200">
               <SelectValue placeholder="Chọn Loại Cho Bài Viết" />
             </SelectTrigger>
             <SelectContent>
@@ -257,25 +321,81 @@ const CreatePost = () => {
           </div>
         )}
 
-        {/* ReactQuill Editor */}
-        <div className="mt-8">
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            placeholder="Nhập nội dung bài viết của bạn..."
-            className="min-h-80 sm:min-h-[400px] w-full rounded-lg border border-slate-300"
-            required
-            value={formData.content || ""}
-            onChange={(value) => {
-              setFormData({ ...formData, content: value });
-              setTimeout(() => {
-                const quillEditor = quillRef.current.getEditor();
-                const height = quillEditor.root.scrollHeight;
-                quillEditor.root.style.height = `${height}px`; // tự động điều chỉnh chiều cao
-              }, 100);
-            }}
-            modules={modules}
-            formats={formats}
+        {editor && (
+          <div className="flex flex-wrap gap-2 border-b border-gray-300 pb-2 mb-2">
+            {toolbarButtons.map(({ command, label, args, isActive }) => (
+              <Button
+                key={label}
+                variant="outline"
+                onClick={() => editor.chain().focus()[command](args).run()}
+                className={isActive?.() ? "bg-gray-200" : ""}
+              >
+                {label}
+              </Button>
+            ))}
+
+            <select
+              onChange={(e) =>
+                editor
+                  .chain()
+                  .focus()
+                  .setMark("textStyle", { fontSize: e.target.value })
+                  .run()
+              }
+              defaultValue=""
+              className="border px-2 py-1 rounded text-sm"
+            >
+              <option value="">Cỡ chữ</option>
+              <option value="12px">12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+              <option value="20px">20px</option>
+              <option value="24px">24px</option>
+              <option value="28px">28px</option>
+            </select>
+          </div>
+        )}
+
+        <div className="mt-8 border border-slate-300 rounded-lg p-4">
+          <div className="flex justify-end mb-2">
+            <Button type="button" onClick={insertImageToEditor}>
+              Thêm ảnh vào nội dung
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newWidth = prompt(
+                  "Nhập chiều rộng mới (vd: 400px hoặc auto):",
+                  "auto"
+                );
+                const newHeight = prompt(
+                  "Nhập chiều cao mới (vd: 300px hoặc auto):",
+                  "auto"
+                );
+
+                if (editor && editor.isActive("image")) {
+                  editor
+                    .chain()
+                    .focus()
+                    .updateAttributes("image", {
+                      width: newWidth,
+                      height: newHeight,
+                    })
+                    .run();
+                } else {
+                  toast(
+                    "Vui lòng chọn ảnh trong nội dung trước khi thay đổi kích thước!"
+                  );
+                }
+              }}
+            >
+              Thay đổi kích thước ảnh
+            </Button>
+          </div>
+          <EditorContent
+            editor={editor}
+            className="min-h-[400px] border border-slate-300 rounded-lg shadow-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200"
           />
         </div>
 
@@ -283,14 +403,17 @@ const CreatePost = () => {
         <div className="pt-6 flex flex-col sm:flex-row gap-4 items-center justify-center">
           <Button
             type="submit"
-            className="w-full sm:w-auto bg-green-600 hover:bg-green-700 transition h-14 text-white font-semibold px-8 text-md rounded-md"
+            disabled={isSubmitting}
+            className={`w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white h-14 px-8 text-md rounded-md ${
+              isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            Đăng bài viết
+            {isSubmitting ? "Đang đăng..." : "Đăng bài viết"}
           </Button>
 
           {/* Nút quay lại Dashboard */}
           <Link
-            to="/dashboard?tab=dashboard" // Đường dẫn đến trang Dashboard
+            to="/dashboard?tab=dashboard"
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 transition h-14 flex items-center justify-center text-white font-semibold px-8 text-md rounded-md mt-4 sm:mt-0"
           >
             Quay lại Dashboard
