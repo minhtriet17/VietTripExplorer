@@ -148,19 +148,11 @@ post-content a:hover {
   text-decoration: underline;
 }
 
-.ql-editor img {
+.resizable-image {
   max-width: 100%;
   height: auto;
-  display: block;
-  margin: 10px auto;
-}
-
-.ql-editor img.align-left {
-  float: left;
-  margin-right: 10px;
-}
-
-.ql-editor img.align-right {
-  float: right;
-  margin-left: 10px;
+  resize: both;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  cursor: nwse-resize;
 }

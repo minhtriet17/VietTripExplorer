@@ -10,12 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { toast } from "sonner";
 import { getFilePreview, uploadFile } from "@/lib/appwrite/uploadImage";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Underline from "@tiptap/extension-underline";
+import Heading from "@tiptap/extension-heading";
+import TextAlign from "@tiptap/extension-text-align";
+import { ResizableImage } from "@/lib/ResizableImage";
+
+import TextStyle from "@tiptap/extension-text-style";
+import FontSize from "@/lib/FontSize";
 
 const EditPost = () => {
   const navigate = useNavigate();
@@ -27,15 +36,12 @@ const EditPost = () => {
   const [imageUploadError, setImageUploadError] = useState(null);
   const [imageUploading, setImageUploading] = useState(null);
 
-  const quillRef = useRef(null);
-
   const [formData, setFormData] = useState({
     title: "",
     category: "",
     content: "",
     image: "",
   });
-  //   console.log(formData)
 
   const [updatePostError, setUpdatePostError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -66,6 +72,8 @@ const EditPost = () => {
     }
   }, [postId]);
 
+  
+
   const handleUploadImage = async () => {
     try {
       if (!file) {
@@ -86,7 +94,6 @@ const EditPost = () => {
       toast("Image uploaded Successfully!");
       setImageUploading(false);
       setPreviewImage(null); // Reset preview sau khi upload xong
-  
     } catch (error) {
       setImageUploadError("Image upload failed");
       console.log(error);
@@ -130,56 +137,116 @@ const EditPost = () => {
     }
   };
 
-  const handleImageUploadInEditor = async () => {
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: false, // disable default heading (chúng ta dùng custom)
+      }),
+      Heading.configure({
+        levels: [1, 2, 3],
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      ResizableImage,
+      TextStyle,
+      FontSize,
+    ],
+    content: formData.content,
+    onUpdate({ editor }) {
+      updateFormData("content", editor.getHTML()); 
+    },
+  });
 
+  // Hàm updateFormData để cập nhật formData
+  const updateFormData = (field, value) => {
+    setFormData(prevState => ({
+      ...prevState,
+      [field]: value,  // Cập nhật trường tương ứng trong formData
+    }));
+  };
+
+  useEffect(() => {
+    if (editor && formData.content) {
+      editor.commands.setContent(formData.content); // đặt lại nội dung khi formData thay đổi
+    }
+  }, [formData.content, editor]);
+
+  const insertImageToEditor = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
     input.onchange = async () => {
       const file = input.files[0];
       if (file) {
         try {
           const uploadedFile = await uploadFile(file);
-          const url = getFilePreview(uploadedFile.$id);
+          const imageUrl = getFilePreview(uploadedFile.$id);
+          const width = prompt("Chiều rộng ảnh (vd: 400px hoặc auto):", "auto");
+          const height = prompt("Chiều cao ảnh (vd: 300px hoặc auto):", "auto");
 
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection();
-          editor.insertEmbed(range.index, "image", url);
-
-          toast("Image uploaded into editor!");
+          editor
+            .chain()
+            .focus()
+            .setImage({ src: imageUrl, width, height })
+            .run();
+          toast("Ảnh đã được chèn vào bài viết!");
         } catch (error) {
-          console.error("Error uploading image: ", error);
           toast("Failed to upload image into editor");
         }
       }
     };
+    input.click();
   };
 
-  const modules = {
-    toolbar: {
-      container: [
-        [{ header: [1, 2, 3, false] }],
-        ["bold", "italic", "underline", "strike"],
-        [{ list: "ordered" }],
-        ["link", "image"], // <-- thêm nút image
-        ["clean"],
-      ],
-      handlers: {
-        image: handleImageUploadInEditor, // <-- custom handler
-      },
+  const toolbarButtons = [
+    {
+      command: "toggleBold",
+      label: "B",
+      isActive: () => editor?.isActive("bold"),
     },
-  };
-
-  const formats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "list",
-    "link",
-    "image",
+    {
+      command: "toggleItalic",
+      label: "I",
+      isActive: () => editor?.isActive("italic"),
+    },
+    {
+      command: "toggleUnderline",
+      label: "U",
+      isActive: () => editor?.isActive("underline"),
+    },
+    {
+      command: "toggleBulletList",
+      label: "• List",
+      isActive: () => editor?.isActive("bulletList"),
+    },
+    {
+      command: "toggleOrderedList",
+      label: "1. List",
+      isActive: () => editor?.isActive("orderedList"),
+    },
+    {
+      command: "setHeading",
+      args: { level: 1 },
+      label: "H1",
+      isActive: () => editor?.isActive("heading", { level: 1 }),
+    },
+    {
+      command: "setHeading",
+      args: { level: 2 },
+      label: "H2",
+      isActive: () => editor?.isActive("heading", { level: 2 }),
+    },
+    {
+      command: "setHeading",
+      args: { level: 3 },
+      label: "H3",
+      isActive: () => editor?.isActive("heading", { level: 3 }),
+    },
+    { command: "setTextAlign", args: "left", label: "←" },
+    { command: "setTextAlign", args: "center", label: "↔" },
+    { command: "setTextAlign", args: "right", label: "→" },
   ];
 
   return (
@@ -289,25 +356,84 @@ const EditPost = () => {
           </div>
         )}
 
-        <div className="mt-8">
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            placeholder="Nhập nội dung bài viết của bạn..."
-            className="min-h-80 sm:min-h-[400px] w-full rounded-lg border border-slate-300"
-            required
-            onChange={(value) => {
-              setFormData({
-                ...formData,
-                content: value,
-              });
-            }}
-            value={formData.content}
-            modules={modules}
-            formats={formats}
+        {editor && (
+          <div className="flex flex-wrap gap-2 border-b border-gray-300 pb-2 mb-2">
+            {toolbarButtons.map(({ command, label, args, isActive }) => (
+              <Button
+                key={label}
+                variant="outline"
+                onClick={() => editor.chain().focus()[command](args).run()}
+                className={isActive?.() ? "bg-gray-200" : ""}
+              >
+                {label}
+              </Button>
+            ))}
+
+            <select
+              onChange={(e) =>
+                editor
+                  .chain()
+                  .focus()
+                  .setMark("textStyle", { fontSize: e.target.value })
+                  .run()
+              }
+              defaultValue=""
+              className="border px-2 py-1 rounded text-sm"
+            >
+              <option value="">Cỡ chữ</option>
+              <option value="12px">12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+              <option value="20px">20px</option>
+              <option value="24px">24px</option>
+              <option value="28px">28px</option>
+            </select>
+          </div>
+        )}
+
+        <div className="mt-8 border border-slate-300 rounded-lg p-4">
+          <div className="flex justify-end mb-2">
+            <Button type="button" onClick={insertImageToEditor}>
+              Thêm ảnh vào nội dung
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newWidth = prompt(
+                  "Nhập chiều rộng mới (vd: 400px hoặc auto):",
+                  "auto"
+                );
+                const newHeight = prompt(
+                  "Nhập chiều cao mới (vd: 300px hoặc auto):",
+                  "auto"
+                );
+
+                if (editor && editor.isActive("image")) {
+                  editor
+                    .chain()
+                    .focus()
+                    .updateAttributes("image", {
+                      width: newWidth,
+                      height: newHeight,
+                    })
+                    .run();
+                } else {
+                  toast(
+                    "Vui lòng chọn ảnh trong nội dung trước khi thay đổi kích thước!"
+                  );
+                }
+              }}
+            >
+              Thay đổi kích thước ảnh
+            </Button>
+          </div>
+          <EditorContent
+            editor={editor}
+            className="min-h-[400px] border border-slate-300 rounded-lg shadow-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200"
           />
         </div>
-        
+
         <div className="pt-6 flex flex-col sm:flex-row gap-4 items-center justify-center">
           <Button
             type="submit"
@@ -324,7 +450,6 @@ const EditPost = () => {
             Quay lại Dashboard
           </Link>
         </div>
-        
 
         {updatePostError && (
           <p className="text-red-600 mt-2 text-sm">{updatePostError}</p>

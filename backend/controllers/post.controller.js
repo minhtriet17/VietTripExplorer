@@ -11,7 +11,7 @@ export const create = async (req, res, next) => {
     return next(errorHandler(400, "Please provide all the required fields!"));
   }
 
-  const slug = slugify(req.body.location?.displayName || "", {
+  const slug = slugify(req.body.title, {
     lower: true,
     strict: true,
     locale: "vi",
