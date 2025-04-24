@@ -21,6 +21,8 @@ import CreateTrip from './pages/CreateTrip'
 import ViewTrip from './pages/ViewTrip'
 import MyTrip from './pages/MyTrip'
 import EmailVerifyPage from './pages/EmailVerifyPage'
+import ForgotPasswordForm from './auth/forms/ForgotPasswordForm'
+import ResetPasswordForm from './auth/forms/ResetPasswordForm'
 
 
 const App = () => {
@@ -32,6 +34,8 @@ const App = () => {
         <Route path="/Sign-in" element={<SignInForm />}/>
         <Route path="/Sign-up" element={<SignUpForm />}/>
         <Route path="/verify-email" element={<EmailVerifyPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
 
         <Route path="/" element={<Home />}/>
         <Route path="/about" element={<About />}/>

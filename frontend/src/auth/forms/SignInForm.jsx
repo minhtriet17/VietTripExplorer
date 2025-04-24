@@ -187,6 +187,16 @@ const SignInForm = () => {
             </Link>
           </div>
 
+          <div className="flex justify-between items-center mt-6 text-sm text-slate-600">
+            <span>Bạn quên mật khẩu?</span>
+            <Link
+              to="/forgot-password"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
+
           {errorMessage && <p className="mt-4 text-red-500">{errorMessage}</p>}
         </div>
       </div>
