@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from '../ui/button'
 import { IoIosSend } from 'react-icons/io'
-import { GetPlacesDetails, PHOTO_REF_URL } from '@/service/GlobalAPI';
+import { GetPlacesDetails, getPlacePhotoUrl } from '@/service/GlobalAPI';
 
 const InfoSection = ({trip}) => {
 
@@ -14,37 +14,40 @@ const InfoSection = ({trip}) => {
         }
       }, [trip]);
     
-    const GetPlacePhoto = async () => {
+      const GetPlacePhoto = async () => {
         const data = {
           textQuery: trip?.location?.displayName,
         };
-    
+      
         try {
           const result = await GetPlacesDetails(data);
           const places = result?.data?.places;
-    
+      
           if (places && places.length > 0) {
             const photos = places[0]?.photos;
-    
-            if (photos && photos.length > 3) {
-              const photoName = photos[3]?.name; // Lấy ảnh thứ 4 nếu có
-              if (photoName) {
-                const photoUrl = PHOTO_REF_URL.replace('{NAME}', photoName);
-                setPhotoUrl(photoUrl); // Cập nhật URL ảnh
+      
+            if (photos && photos.length > 0) {
+              const photoName = photos[0]?.name;
+      
+              if (typeof photoName === "string" && photoName.startsWith("places/")) {
+                const photoUrl = getPlacePhotoUrl(photoName);
+                setPhotoUrl(photoUrl);
               } else {
-                setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh
+                setPhotoUrl("/PlaceHolder.png");
               }
             } else {
-              setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh đủ
+              setPhotoUrl("/PlaceHolder.png");
             }
           } else {
-            setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có địa điểm
+            setPhotoUrl("/PlaceHolder.png");
           }
         } catch (error) {
           console.error("Error fetching place photo:", error);
-          setPhotoUrl("/PlaceHolder.png"); // Fallback nếu có lỗi
+          setPhotoUrl("/PlaceHolder.png");
         }
-    };
+      };
+
+
 
   return (
     <div>

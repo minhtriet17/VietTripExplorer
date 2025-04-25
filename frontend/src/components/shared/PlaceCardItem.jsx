@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from '../ui/button'
 import { FaMapLocationDot } from "react-icons/fa6";
-import { GetPlacesDetails, PHOTO_REF_URL } from '@/service/GlobalAPI';
+import { getPlacePhotoUrl, GetPlacesDetails} from '@/service/GlobalAPI';
 
 const PlaceCardItem = ({ plan }) => {
   const [photoUrl, setPhotoUrl] = useState("/PlaceHolder.png"); // Default to placeholder
@@ -15,7 +15,7 @@ const PlaceCardItem = ({ plan }) => {
       
   const GetPlacePhoto = async () => {
     const hasCoordinates = !!(plan?.Coordinates?.latitude && plan?.Coordinates?.longitude);
-
+  
     const data = {
       textQuery: `${plan?.PlaceName}, Việt Nam`,
       ...(hasCoordinates && {
@@ -30,31 +30,24 @@ const PlaceCardItem = ({ plan }) => {
         },
       }),
     };
-
+  
     try {
       const result = await GetPlacesDetails(data);
-      const places = result?.data?.places;
-
-      if (places && places.length > 0) {
-        const photos = places[0]?.photos; // Lấy danh sách ảnh của địa điểm
-
-        if (photos && photos.length > 0) {
-          const photoName = photos[0]?.name; // Lấy ảnh đầu tiên, có thể thay đổi index
-          if (photoName) {
-            const photoUrl = PHOTO_REF_URL.replace('{NAME}', photoName);
-            setPhotoUrl(photoUrl); // Cập nhật URL ảnh vào state
-          } else {
-            setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh
-          }
-        } else {
-          setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh
-        }
+      const place = result?.data?.places?.[0];
+  
+      const photoName = place?.photos?.[0]?.name;
+      if (typeof photoName === "string" && photoName.startsWith("places/")) {
+        const photoUrl = getPlacePhotoUrl(photoName);
+        setPhotoUrl(photoUrl);
+      } else {
+        setPhotoUrl("/PlaceHolder.png");
       }
     } catch (error) {
       console.error("Error fetching place photo:", error);
-      setPhotoUrl("/PlaceHolder.png"); // Fallback nếu có lỗi
+      setPhotoUrl("/PlaceHolder.png");
     }
   };
+
   return (
     <div className="border rounded-xl p-4 flex flex-col hover:scale-105 transition-all hover:shadow duration-200 ease-in-out cursor-pointer h-full">
       <a

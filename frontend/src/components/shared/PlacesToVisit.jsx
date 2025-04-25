@@ -13,7 +13,7 @@ const PlacesToVisit = ({trip}) => {
 
         <div className="">
             {trip.aiItinerary?.dailyItinerary?.map((item, index) => (
-                <div className="mt-5">
+                <div className="mt-5" key={index}>
                     
                     <h2 className="font-bold text-lg mt-5">
                             Ngày {item?.day}

@@ -1,4 +1,4 @@
-import { GetPlacesDetails, PHOTO_REF_URL } from '@/service/GlobalAPI'
+import { getPlacePhotoUrl, GetPlacesDetails } from '@/service/GlobalAPI'
 import React, { useEffect, useState } from 'react'
 
 const HotelCardItem = ({hotel, index}) => {
@@ -27,7 +27,7 @@ const HotelCardItem = ({hotel, index}) => {
             if (photos && photos.length > 0) {
               const photoName = photos[0]?.name; // Lấy ảnh đầu tiên, có thể thay đổi index
               if (photoName) {
-                const photoUrl = PHOTO_REF_URL.replace('{NAME}', photoName);
+                const photoUrl = getPlacePhotoUrl(photoName);
                 setPhotoUrl(photoUrl); // Cập nhật URL ảnh vào state
               } else {
                 setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh

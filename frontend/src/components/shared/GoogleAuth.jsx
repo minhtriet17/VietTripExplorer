@@ -43,7 +43,7 @@ const GoogleAuth = () => {
     <div>
         <Button type="button" 
         className="bg-green-500 w-full" 
-        onClick={handleGoogleClick}>Continue with Google</Button>
+        onClick={handleGoogleClick}>Đăng nhập với Google</Button>
     </div>
   )
 }
