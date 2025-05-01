@@ -4,7 +4,7 @@ import { FaMapLocationDot } from "react-icons/fa6";
 import { getPlacePhotoUrl, GetPlacesDetails} from '@/service/GlobalAPI';
 
 const PlaceCardItem = ({ plan }) => {
-  const [photoUrl, setPhotoUrl] = useState("/PlaceHolder.png"); // Default to placeholder
+  const [photoUrl, setPhotoUrl] = useState("/logo.png"); // Default to placeholder
   
   
   useEffect(() => {
@@ -40,11 +40,11 @@ const PlaceCardItem = ({ plan }) => {
         const photoUrl = getPlacePhotoUrl(photoName);
         setPhotoUrl(photoUrl);
       } else {
-        setPhotoUrl("/PlaceHolder.png");
+        setPhotoUrl("/logo.png");
       }
     } catch (error) {
       console.error("Error fetching place photo:", error);
-      setPhotoUrl("/PlaceHolder.png");
+      setPhotoUrl("/logo.png");
     }
   };
 

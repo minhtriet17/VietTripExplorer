@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 
+const Spinner = () => (
+  <div className="flex justify-center items-center">
+    <div className="w-16 h-16 border-4 border-t-transparent border-blue-500 border-solid rounded-full animate-spin"></div>
+  </div>
+);
+
 const MyTrip = () => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useSelector((state) => state.user);
@@ -55,7 +61,7 @@ const MyTrip = () => {
 
   console.log("Trip Plans:", userPlans);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Spinner />; 
 
   const handleDeleteTrip = async () => {
     try {
