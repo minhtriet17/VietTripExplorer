@@ -5,7 +5,7 @@ import { GetPlacesDetails, getPlacePhotoUrl } from '@/service/GlobalAPI';
 
 const InfoSection = ({trip}) => {
 
-    const [photoUrl, setPhotoUrl] = useState("/PlaceHolder.png"); // Default to placeholder
+    const [photoUrl, setPhotoUrl] = useState("/logo.png"); // Default to placeholder
 
 
     useEffect(() => {
@@ -33,17 +33,17 @@ const InfoSection = ({trip}) => {
                 const photoUrl = getPlacePhotoUrl(photoName);
                 setPhotoUrl(photoUrl);
               } else {
-                setPhotoUrl("/PlaceHolder.png");
+                setPhotoUrl("/logo.png");
               }
             } else {
-              setPhotoUrl("/PlaceHolder.png");
+              setPhotoUrl("/logo.png");
             }
           } else {
-            setPhotoUrl("/PlaceHolder.png");
+            setPhotoUrl("/logo.png");
           }
         } catch (error) {
           console.error("Error fetching place photo:", error);
-          setPhotoUrl("/PlaceHolder.png");
+          setPhotoUrl("/logo.png");
         }
       };
 

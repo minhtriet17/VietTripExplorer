@@ -195,15 +195,16 @@ const DashboardProfile = () => {
           id="email"
           placeholder="Email"
           defaultValue={currentUser.email}
-          className="h-12 rounded-xl border border-slate-300 focus:ring-2 focus:ring-green-400"
+          className="h-12 rounded-xl border border-slate-300 focus:ring-2 focus:ring-green-400 bg-gray-100 cursor-not-allowed"
           onChange={handleChange}
+          readOnly
         />
 
         <Input
           type="password"
           id="password"
           placeholder="Mật khẩu mới"
-          className="h-12 rounded-xl border border-slate-300 focus:ring-2 focus:ring-green-400"
+          className="h-12 rounded-xl border border-slate-300 focus:ring-2 focus:ring-green-400" 
           onChange={handleChange}
         />
 
