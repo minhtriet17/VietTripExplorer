@@ -82,7 +82,7 @@ const Header = () => {
           <div className='hidden lg:flex gap-4 text-slate-700 text-sm font-medium'>
             <Link to={"/"} className='hover:underline'>Trang Chủ</Link>
             <Link to={"/about"} className='hover:underline'>Về Chúng Tôi</Link>
-            <Link to={"/news"} className='hover:underline'>Tin Tức</Link>
+            <Link to={"/news"} className='hover:underline'>Blog</Link>
             <Link to={"/create-trip"} className='hover:underline'>Tạo Lịch Trình</Link>
             <Link to={"/plans"} className='hover:underline'>Lịch Trình Của Tôi</Link>
           </div>
@@ -129,7 +129,7 @@ const Header = () => {
           <div className='w-full flex flex-col gap-3 mt-3 lg:hidden text-slate-700 text-sm font-medium'>
             <Link to={"/"} className='hover:underline'>Trang Chủ</Link>
             <Link to={"/about"} className='hover:underline'>Về Chúng Tôi</Link>
-            <Link to={"/news"} className='hover:underline'>Tin Tức</Link>
+            <Link to={"/news"} className='hover:underline'>Blog</Link>
             <Link to={"/create-trip"} className='hover:underline'>Tạo Lịch Trình</Link>
             <Link to={"/plans"} className='hover:underline'>Lịch Trình Của Tôi</Link>
           </div>

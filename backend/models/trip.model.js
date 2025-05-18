@@ -10,6 +10,12 @@ const tripSchema = new mongoose.Schema(
     noOfDays: Number,
     budget: String,
     traveler: String,
+    startDate:{
+      type: Date,
+    },
+    endDate:{
+      type: Date,
+    },
     aiItinerary: {
         tripDetails: {
           destination: String,
