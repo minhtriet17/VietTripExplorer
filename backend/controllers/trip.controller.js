@@ -4,70 +4,10 @@ import axios from "axios";
 import slugify from "slugify";
 import { fetchUnsplashImage } from "../utils/fetchUnsplashImage.js";
 
-// export const createTrip = async (req, res, next) => {
-
-//     if (!req.body.location || !req.body.noOfDays || !req.body.budget || !req.body.traveler) {
-//         return next(errorHandler(400, "Please provide all the required fields!"));
-//     }
-
-//     if (!req.user || !req.user.id) {
-//         return next(errorHandler(403, "You must log in to create a travel itinerary!"));
-//     }
-
-//     const slug = slugify(req.body.location?.displayName || "", {
-//       lower: true,
-//       strict: true,
-//       locale: 'vi'
-//     });
-
-//     // Gọi API Nominatim để lấy latitude & longitude
-//     let coordinates = { lat: null, lng: null };
-
-//     try {
-//       const response = await axios.get("https://nominatim.openstreetmap.org/search", {
-//         params: {
-//           q: req.body.location.displayName,
-//           format: "json",
-//           limit: 1,
-//         },
-//         headers: {
-//           "User-Agent": "viet-trip-explaner/1.0 (nhmtriet17@gmail.com)",
-//         },
-//       });
-
-//       if (response.data.length > 0) {
-//         const { lat, lon } = response.data[0];
-//         coordinates.lat = parseFloat(lat);
-//         coordinates.lng = parseFloat(lon);
-//       } else {
-//         console.warn("Không tìm thấy tọa độ cho địa điểm:", req.body.location?.displayName);
-//       }
-//     } catch (geoErr) {
-//       console.error("Lỗi khi lấy toạ độ:", geoErr.message);
-//     }
-
-//     // Tạo mới Trip document
-//   const newTrip = new Trip({
-//     ...req.body,
-//     slug,
-//     location: {
-//       ...req.body.location,
-//       ...coordinates
-//     },
-//     userId: req.user.id, // Nếu bạn có quản lý theo user
-//   });
-
-//   try {
-//     const savedTrip = await newTrip.save();
-//     res.status(201).json(savedTrip);
-//   } catch (error) {
-//     next(error);
-//   }
-// }
 export const createTrip = async (req, res, next) => {
   try {
     // 1. Validate request body trước
-    const { location, noOfDays, budget, traveler, aiItinerary } = req.body;
+    const { location, noOfDays, budget, traveler, startDate, endDate, aiItinerary } = req.body;
     if (!location || !noOfDays || !budget || !traveler) {
       return next(
         errorHandler(400, "Vui lòng cung cấp đầy đủ các trường thông tin.")
@@ -147,6 +87,8 @@ export const createTrip = async (req, res, next) => {
       noOfDays,
       budget: String(budget), // ép kiểu về String nếu frontend gửi number
       traveler,
+      startDate,
+      endDate,
       aiItinerary: aiItinerary || null, // phòng khi không có aiItinerary
       userId: req.user.id,
       slug,
