@@ -63,13 +63,13 @@ const InfoSection = ({trip}) => {
 
                 <div className="flex gap-5 items-center">
                     <h2 className='p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md'>
-                        📅 {trip?.noOfDays} Days
+                        📅 {trip?.noOfDays} Ngày
                     </h2>
                     <h2 className='p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md'>
-                        💰 {trip?.budget} Budgets
+                        💰 Chi tiêu: {trip?.budget} 
                     </h2>
                     <h2 className='p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md'>
-                        🥂 No. Of Traveler: {trip?.traveler} 
+                        🥂 Số người: {trip?.traveler} 
                     </h2>
                 </div>
             </div>

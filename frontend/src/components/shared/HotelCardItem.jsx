@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 
 const HotelCardItem = ({hotel, index}) => {
 
-    const [photoUrl, setPhotoUrl] = useState("/PlaceHolder.png");
+    const [photoUrl, setPhotoUrl] = useState("/logo.png");
     
     
     useEffect(() => {
@@ -30,15 +30,15 @@ const HotelCardItem = ({hotel, index}) => {
                 const photoUrl = getPlacePhotoUrl(photoName);
                 setPhotoUrl(photoUrl); // Cập nhật URL ảnh vào state
               } else {
-                setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh
+                setPhotoUrl("/logo.png"); // Fallback nếu không có ảnh
               }
             } else {
-              setPhotoUrl("/PlaceHolder.png"); // Fallback nếu không có ảnh
+              setPhotoUrl("/logo.png"); // Fallback nếu không có ảnh
             }
           }
         } catch (error) {
           console.error("Error fetching hotel photo:", error);
-          setPhotoUrl("/PlaceHolder.png"); // Fallback nếu có lỗi
+          setPhotoUrl("/logo.png"); // Fallback nếu có lỗi
         }
     };
 
