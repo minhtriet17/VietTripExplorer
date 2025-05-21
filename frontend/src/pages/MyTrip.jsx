@@ -25,9 +25,12 @@ const MyTrip = () => {
   const { currentUser } = useSelector((state) => state.user);
 
   const [tripIdToDelete, setTripIdToDelete] = useState("");
-
   const [userPlans, setUserPlans] = useState([]);
-  const [showMore, setShowMore] = useState(true);
+
+  // Pagination states:
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,11 +46,7 @@ const MyTrip = () => {
         const data = await res.json();
 
         if (res.ok) {
-          setUserPlans(data.tripPlans); // nhớ đặt state đúng tên
-
-          if (data.tripPlans.length < 1) {
-            setShowMore(false);
-          }
+          setUserPlans(data.tripPlans);
         }
       } catch (error) {
         console.log(error);
@@ -56,12 +55,17 @@ const MyTrip = () => {
       }
     };
 
-      fetchTrips();
+    fetchTrips();
   }, [currentUser, navigate]);
 
-  console.log("Trip Plans:", userPlans);
+  if (loading) return <Spinner />;
 
-  if (loading) return <Spinner />; 
+  // Tính chỉ số để lấy phần tử cho trang hiện tại
+  const lastIndex = currentPage * itemsPerPage;
+  const firstIndex = lastIndex - itemsPerPage;
+  const currentItems = userPlans.slice(firstIndex, lastIndex);
+
+  const totalPages = Math.ceil(userPlans.length / itemsPerPage);
 
   const handleDeleteTrip = async () => {
     try {
@@ -80,11 +84,36 @@ const MyTrip = () => {
         setUserPlans((prev) =>
           prev.filter((trip) => trip._id !== tripIdToDelete)
         );
+        if ((currentItems.length === 1) && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
       }
     } catch (error) {
       console.log(error.message);
     }
   };
+
+  // Hàm render nút số trang
+  const renderPageNumbers = () => {
+    const buttons = [];
+    for (let i = 1; i <= totalPages; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={`px-3 py-1 rounded-md border ${
+            currentPage === i
+              ? "bg-blue-600 text-white cursor-default"
+              : "bg-white text-blue-600 hover:bg-blue-100"
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+    return buttons;
+  };
+
   return (
     <div className="px-4 py-10 sm:px-6 md:px-12 lg:px-20 xl:px-32 bg-gray-50 min-h-screen">
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center sm:text-left">
@@ -92,8 +121,8 @@ const MyTrip = () => {
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {userPlans.length > 0 ? (
-          userPlans.map((plan) => (
+        {currentItems.length > 0 ? (
+          currentItems.map((plan) => (
             <div
               key={plan._id}
               className="relative bg-white rounded-xl shadow-md overflow-hidden"
@@ -142,6 +171,39 @@ const MyTrip = () => {
           </p>
         )}
       </div>
+
+      {/* Pagination controls */}
+      {userPlans.length > itemsPerPage && (
+        <div className="flex justify-center items-center space-x-2 mt-8">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 rounded-md border ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white text-blue-600 hover:bg-blue-100"
+            }`}
+          >
+            Trang trước
+          </button>
+
+          {renderPageNumbers()}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 rounded-md border ${
+              currentPage === totalPages
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white text-blue-600 hover:bg-blue-100"
+            }`}
+          >
+            Trang sau
+          </button>
+        </div>
+      )}
     </div>
   );
 };
