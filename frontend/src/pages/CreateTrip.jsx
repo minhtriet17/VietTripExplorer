@@ -220,10 +220,39 @@ const CreateTrip = () => {
                     onChange={(e) => {
                       const updatedDates = [...specificDates];
                       updatedDates[index] = e.target.value;
+
+                      // Lọc ra các ngày đã chọn (không rỗng)
+                      const selectedDates = updatedDates.filter(
+                        (date) => date !== ""
+                      );
+
+                      // Kiểm tra nếu đã chọn đủ số ngày thì kiểm tra liên tiếp
+                      if (selectedDates.length === updatedDates.length) {
+                        // Sắp xếp ngày tăng dần
+                        const sortedDates = [...selectedDates].sort();
+                        let isConsecutive = true;
+
+                        for (let i = 1; i < sortedDates.length; i++) {
+                          const prev = new Date(sortedDates[i - 1]);
+                          const curr = new Date(sortedDates[i]);
+                          const diff = (curr - prev) / (1000 * 60 * 60 * 24); // số ngày
+
+                          if (diff !== 1) {
+                            isConsecutive = false;
+                            break;
+                          }
+                        }
+
+                        if (!isConsecutive) {
+                          toast.error("Các ngày phải liên tiếp nhau!");
+                          return; // không cập nhật state nếu không hợp lệ
+                        }
+                      }
+
                       setSpecificDates(updatedDates);
 
-                      // cập nhật luôn formattedDates tương ứng
                       const updatedFormatted = updatedDates.map((dateStr) => {
+                        if (!dateStr) return "";
                         const [y, m, d] = dateStr.split("-");
                         return `${d}/${m}/${y}`;
                       });
