@@ -40,7 +40,7 @@ const tripSchema = new mongoose.Schema(
         ],
         dailyItinerary: [
           {
-            day: Number,
+            day: Date,
             theme: String,
             schedule: [
               {
