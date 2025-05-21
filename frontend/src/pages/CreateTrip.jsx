@@ -203,36 +203,73 @@ const CreateTrip = () => {
           />
         </div>
 
-        {formattedDates.length > 0 && (
+        {specificDates.length > 0 && (
           <div className="mt-6">
             <h2 className="text-xl font-medium my-3">
-              Chọn ngày cụ thể cho từng ngày
+              Chọn ngày bắt đầu và ngày kết thúc chuyến đi
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {formattedDates.map((date, index) => (
-                <div key={index}>
-                  <label className="block mb-1 font-medium">
-                    Ngày {index + 1}
-                  </label>
-                  <input
-                    type="date"
-                    value={specificDates[index]}
-                    onChange={(e) => {
-                      const updatedDates = [...specificDates];
-                      updatedDates[index] = e.target.value;
-                      setSpecificDates(updatedDates);
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-medium">Ngày bắt đầu</label>
+                <input
+                  type="date"
+                  value={specificDates[0]}
+                  onChange={(e) => {
+                    const newStartDate = e.target.value;
+                    const daysCount = specificDates.length;
+                    const newDates = [];
 
-                      // cập nhật luôn formattedDates tương ứng
-                      const updatedFormatted = updatedDates.map((dateStr) => {
-                        const [y, m, d] = dateStr.split("-");
-                        return `${d}/${m}/${y}`;
-                      });
-                      setFormattedDates(updatedFormatted);
-                    }}
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-              ))}
+                    for (let i = 0; i < daysCount; i++) {
+                      const d = new Date(newStartDate);
+                      d.setDate(d.getDate() + i);
+                      newDates.push(d.toISOString().split("T")[0]);
+                    }
+
+                    setSpecificDates(newDates);
+
+                    // Cập nhật formattedDates luôn cho hiển thị
+                    const formatted = newDates.map((dateStr) => {
+                      const [y, m, d] = dateStr.split("-");
+                      return `${d}/${m}/${y}`;
+                    });
+                    setFormattedDates(formatted);
+                  }}
+                  className="w-full p-2 border rounded-md"
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">Ngày kết thúc</label>
+                <input
+                  type="date"
+                  value={specificDates[specificDates.length - 1]}
+                  onChange={(e) => {
+                    const newEndDate = e.target.value;
+                    const daysCount = specificDates.length;
+                    const newStartDate = new Date(newEndDate);
+                    newStartDate.setDate(newStartDate.getDate() - daysCount + 1);
+
+                    const newDates = [];
+
+                    for (let i = 0; i < daysCount; i++) {
+                      const d = new Date(newStartDate);
+                      d.setDate(d.getDate() + i);
+                      newDates.push(d.toISOString().split("T")[0]);
+                    }
+
+                    setSpecificDates(newDates);
+
+                    const formatted = newDates.map((dateStr) => {
+                      const [y, m, d] = dateStr.split("-");
+                      return `${d}/${m}/${y}`;
+                    });
+                    setFormattedDates(formatted);
+                  }}
+                  className="w-full p-2 border rounded-md"
+                  min={specificDates[0]}
+                />
+              </div>
             </div>
           </div>
         )}
