@@ -203,65 +203,73 @@ const CreateTrip = () => {
           />
         </div>
 
-        {formattedDates.length > 0 && (
+        {specificDates.length > 0 && (
           <div className="mt-6">
             <h2 className="text-xl font-medium my-3">
-              Chọn ngày cụ thể cho từng ngày
+              Chọn ngày bắt đầu và ngày kết thúc chuyến đi
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {formattedDates.map((date, index) => (
-                <div key={index}>
-                  <label className="block mb-1 font-medium">
-                    Ngày {index + 1}
-                  </label>
-                  <input
-                    type="date"
-                    value={specificDates[index]}
-                    onChange={(e) => {
-                      const updatedDates = [...specificDates];
-                      updatedDates[index] = e.target.value;
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-medium">Ngày bắt đầu</label>
+                <input
+                  type="date"
+                  value={specificDates[0]}
+                  onChange={(e) => {
+                    const newStartDate = e.target.value;
+                    const daysCount = specificDates.length;
+                    const newDates = [];
 
-                      // Lọc ra các ngày đã chọn (không rỗng)
-                      const selectedDates = updatedDates.filter(
-                        (date) => date !== ""
-                      );
+                    for (let i = 0; i < daysCount; i++) {
+                      const d = new Date(newStartDate);
+                      d.setDate(d.getDate() + i);
+                      newDates.push(d.toISOString().split("T")[0]);
+                    }
 
-                      // Kiểm tra nếu đã chọn đủ số ngày thì kiểm tra liên tiếp
-                      if (selectedDates.length === updatedDates.length) {
-                        // Sắp xếp ngày tăng dần
-                        const sortedDates = [...selectedDates].sort();
-                        let isConsecutive = true;
+                    setSpecificDates(newDates);
 
-                        for (let i = 1; i < sortedDates.length; i++) {
-                          const prev = new Date(sortedDates[i - 1]);
-                          const curr = new Date(sortedDates[i]);
-                          const diff = (curr - prev) / (1000 * 60 * 60 * 24); // số ngày
+                    // Cập nhật formattedDates luôn cho hiển thị
+                    const formatted = newDates.map((dateStr) => {
+                      const [y, m, d] = dateStr.split("-");
+                      return `${d}/${m}/${y}`;
+                    });
+                    setFormattedDates(formatted);
+                  }}
+                  className="w-full p-2 border rounded-md"
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
 
-                          if (diff !== 1) {
-                            isConsecutive = false;
-                            break;
-                          }
-                        }
+              <div>
+                <label className="block mb-1 font-medium">Ngày kết thúc</label>
+                <input
+                  type="date"
+                  value={specificDates[specificDates.length - 1]}
+                  onChange={(e) => {
+                    const newEndDate = e.target.value;
+                    const daysCount = specificDates.length;
+                    const newStartDate = new Date(newEndDate);
+                    newStartDate.setDate(newStartDate.getDate() - daysCount + 1);
 
-                        if (!isConsecutive) {
-                          toast.error("Các ngày phải liên tiếp nhau!");
-                          return; // không cập nhật state nếu không hợp lệ
-                        }
-                      }
+                    const newDates = [];
 
-                      setSpecificDates(updatedDates);
+                    for (let i = 0; i < daysCount; i++) {
+                      const d = new Date(newStartDate);
+                      d.setDate(d.getDate() + i);
+                      newDates.push(d.toISOString().split("T")[0]);
+                    }
 
-                      const updatedFormatted = updatedDates.map((dateStr) => {
-                        if (!dateStr) return "";
-                        const [y, m, d] = dateStr.split("-");
-                        return `${d}/${m}/${y}`;
-                      });
-                      setFormattedDates(updatedFormatted);
-                    }}
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-              ))}
+                    setSpecificDates(newDates);
+
+                    const formatted = newDates.map((dateStr) => {
+                      const [y, m, d] = dateStr.split("-");
+                      return `${d}/${m}/${y}`;
+                    });
+                    setFormattedDates(formatted);
+                  }}
+                  className="w-full p-2 border rounded-md"
+                  min={specificDates[0]}
+                />
+              </div>
             </div>
           </div>
         )}
