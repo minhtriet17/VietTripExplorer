@@ -7,7 +7,15 @@ import { fetchUnsplashImage } from "../utils/fetchUnsplashImage.js";
 export const createTrip = async (req, res, next) => {
   try {
     // 1. Validate request body trước
-    const { location, noOfDays, budget, traveler, startDate, endDate, aiItinerary } = req.body;
+    const {
+      location,
+      noOfDays,
+      budget,
+      traveler,
+      startDate,
+      endDate,
+      aiItinerary,
+    } = req.body;
     if (!location || !noOfDays || !budget || !traveler) {
       return next(
         errorHandler(400, "Vui lòng cung cấp đầy đủ các trường thông tin.")
@@ -207,5 +215,139 @@ export const deleteTrip = async (req, res, next) => {
     res.status(200).json("Lịch trình đã được xóa thành công!");
   } catch (error) {
     next(error);
+  }
+};
+
+export const updateTrip = async (req, res, next) => {
+  try {
+    const trip = await Trip.findById(req.params.tripId);
+    if (!trip) {
+      return next(errorHandler(404, "Không tìm thấy lịch trình"));
+    }
+
+    if (trip.userId !== req.user.id) {
+      return next(errorHandler(403, "Bạn không có quyền sửa đổi lịch trình này!"));
+    }
+
+   // Các trường cho phép cập nhật
+    const updatableFields = [
+      "location",
+      "noOfDays",
+      "budget",
+      "traveler",
+      "startDate",
+      "endDate",
+      "aiItinerary"
+    ];
+
+    const updates = {};
+    updatableFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    // Nếu location hoặc aiItinerary.destination thay đổi → cập nhật slug
+    if (updates.location?.displayName) {
+      updates.slug = slugify(updates.location.displayName + "-" + req.params.tripId, {
+        lower: true,
+        strict: true,
+      });
+    }
+
+    // Cập nhật
+    const updatedTrip = await Trip.findByIdAndUpdate(
+      req.params.tripId,
+      { $set: updates },
+      { new: true }
+    );
+
+    res.status(200).json(updatedTrip);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addScheduleToTrip = async (req, res, next) => {
+  const { tripId, day } = req.params;
+  const newScheduleItem = {
+    _id: new mongoose.Types.ObjectId(), // generate _id thủ công
+    ...req.body,
+  };
+
+  try {
+    const updatedTrip = await Trip.findOneAndUpdate(
+      { _id: tripId, userId: req.user.id, "aiItinerary.dailyItinerary.day": parseInt(day) },
+      {
+        $push: {
+          "aiItinerary.dailyItinerary.$.schedule": newScheduleItem,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedTrip) return next(errorHandler(404, "Không tìm thấy lịch trình hoặc ngày"));
+
+    res.status(200).json({ message: "Đã thêm địa điểm vào ngày " + day, newScheduleItem });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateScheduleInTrip = async (req, res, next) => {
+  const { tripId, day, scheduleId } = req.params;
+
+  try {
+    const updatedTrip = await Trip.findOneAndUpdate(
+      {
+        _id: tripId,
+        userId: req.user.id,
+        "aiItinerary.dailyItinerary.day": parseInt(day),
+      },
+      {
+        $set: {
+          "aiItinerary.dailyItinerary.$[dayElem].schedule.$[schedElem]": req.body,
+        },
+      },
+      {
+        new: true,
+        arrayFilters: [
+          { "dayElem.day": parseInt(day) },
+          { "schedElem._id": scheduleId },
+        ],
+      }
+    );
+
+    if (!updatedTrip) return next(errorHandler(404, "Không tìm thấy lịch trình hoặc địa điểm"));
+
+    res.status(200).json({ message: "Đã cập nhật địa điểm", updatedTrip });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteScheduleFromTrip = async (req, res, next) => {
+  const { tripId, day, scheduleId } = req.params;
+
+  try {
+    const updatedTrip = await Trip.findOneAndUpdate(
+      {
+        _id: tripId,
+        userId: req.user.id,
+        "aiItinerary.dailyItinerary.day": parseInt(day),
+      },
+      {
+        $pull: {
+          "aiItinerary.dailyItinerary.$.schedule": { _id: scheduleId },
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedTrip) return next(errorHandler(404, "Không tìm thấy lịch trình hoặc địa điểm"));
+
+    res.status(200).json({ message: "Đã xoá địa điểm", updatedTrip });
+  } catch (err) {
+    next(err);
   }
 };
